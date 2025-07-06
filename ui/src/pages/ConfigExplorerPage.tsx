@@ -8,7 +8,7 @@ import { getConfig, getState } from '../services/taskService';
 
 export default function ConfigExplorerPage() {
   const [activeConfig, setActiveConfig] = useState<string | null>('main');
-  const [projectName, setProjectName] = useState<string>('TaskMonster Core');
+  const [projectName, setProjectName] = useState<string>('TaskMaster Core');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

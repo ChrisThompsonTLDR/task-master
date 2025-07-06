@@ -95,7 +95,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- TASKMASTER_EXPORT_START -->
 > 🎯 **Taskmaster Export** - 2025-06-29 15:01:40 UTC
 > 📋 Export: without subtasks • Status filter: none
-> 🔗 Powered by [Task Master](https://task-master.dev?utm_source=github-readme&utm_medium=readme-export&utm_campaign=taskmonster&utm_content=task-export-link)
+> 🔗 Powered by [Task Master](https://task-master.dev?utm_source=github-readme&utm_medium=readme-export&utm_campaign=taskmaster&utm_content=task-export-link)
 
 ```
 ╭─────────────────────────────────────────────────────────╮╭─────────────────────────────────────────────────────────╮

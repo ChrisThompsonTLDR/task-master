@@ -143,7 +143,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="h-16 shrink-0">
         <Link to="/" className="flex items-center justify-center gap-x-2 pt-5">
           <GitCommit className={`h-8 w-8 ${colorMap[colorTheme] || 'text-neutral-500'}`} />
-          {!sidebarCollapsed && <span className="text-white font-bold text-lg">TaskMonster</span>}
+          {!sidebarCollapsed && <span className="text-white font-bold text-lg">TaskMaster</span>}
         </Link>
       </div>
       <nav className="flex flex-1 flex-col">
