@@ -9,9 +9,13 @@ export const useTaskFilters = (tasks: Task[]) => {
 
   const filteredTasks = useMemo(() => {
     return tasks
-      .filter(task => filterStatus === 'all' || task.status === filterStatus)
+      .filter(task => {
+        // Treat 'done' as 'completed' for filtering
+        const normalizedStatus = task.status === 'done' ? 'completed' : task.status;
+        return filterStatus === 'all' || normalizedStatus === filterStatus;
+      })
       .filter(task => filterPriority === 'all' || task.priority === filterPriority)
-      .filter(task => filterTag === 'all' || (task.tags && task.tags.includes(filterTag)))
+      .filter(task => filterTag === 'all' || (Array.isArray(task.tags) && task.tags.includes(filterTag)))
       .filter(task => task.title.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [tasks, filterStatus, filterPriority, filterTag, searchTerm]);
 

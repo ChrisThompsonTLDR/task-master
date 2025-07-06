@@ -13,15 +13,15 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      // Fetch tasks from MCP
+      // Fetch tasks from REST API
       const tasksResult = await getTasks({ withSubtasks: true });
       setTasks(tasksResult.tasks || []);
 
-      // Fetch tags from MCP
+      // Fetch tags from REST API
       const tagsResult = await getTags({});
       setAllTags(tagsResult.tags ? tagsResult.tags.map((t: any) => t.name) : []);
 
-      // Fetch complexity report from MCP
+      // Fetch complexity report from REST API
       try {
         const complexityResult = await getComplexityReport({});
         setComplexityData(complexityResult.complexityAnalysis || []);
@@ -30,11 +30,12 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       setError(null);
     } catch (e: unknown) {
-      console.error("Failed to fetch tasks:", e);
-      if (e instanceof Error) {
-        setError(e.message);
+      console.error('Error fetching tasks:', e);
+      // Detect REST API not running (network error)
+      if (e instanceof TypeError && e.message && e.message.match(/Failed to fetch/)) {
+        setError('REST_API_NOT_RUNNING');
       } else {
-        setError('An unknown error occurred');
+        setError('Failed to fetch tasks');
       }
     } finally {
       setLoading(false);

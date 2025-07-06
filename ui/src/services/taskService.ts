@@ -4,72 +4,76 @@ interface AppState {
   currentTag: string;
 }
 
-// MCP API base URL (assume local MCP server for now)
-const MCP_API_BASE_URL = 'http://localhost:8080/api';
-
-// Helper to call MCP tools
-async function callMcpTool(tool, params) {
-  const response = await fetch(`${MCP_API_BASE_URL}/tools/${tool}/execute`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
-  });
-  if (!response.ok) {
-    throw new Error(`MCP tool ${tool} failed: ${response.status}`);
-  }
-  const data = await response.json();
-  if (!data.success) {
-    throw new Error(`MCP tool ${tool} error: ${data.error || JSON.stringify(data)}`);
-  }
-  return data.data;
-}
+// REST API base URL
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // Get all tasks (optionally by status/tag)
-export async function getTasks({ status, withSubtasks, tag, projectRoot }) {
-  return callMcpTool('get_tasks', {
-    status,
-    withSubtasks,
-    tag,
-    projectRoot: projectRoot || '/c:/Users/Chris/Herd/task-master',
-  });
+export async function getTasks({ withSubtasks = false } = {}): Promise<{ tasks: Task[] }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tasks?withSubtasks=${withSubtasks}`);
+    if (!response.ok) throw new Error('Failed to fetch tasks');
+    const data = await response.json();
+    // Patch: Ensure every task has a tags property (for UI filtering)
+    const tasks = (data.tasks || []).map((task: any) => ({ ...task, tags: Array.isArray(task.tags) ? task.tags : [] }));
+    return { tasks };
+  } catch (e) {
+    throw new Error('Failed to fetch tasks');
+  }
 }
 
 // Get a single task by ID
-export async function getTask({ id, status, tag, projectRoot }) {
-  return callMcpTool('get_task', {
-    id: String(id),
-    status,
-    tag,
-    projectRoot: projectRoot || '/c:/Users/Chris/Herd/task-master',
+export async function getTask({ id, status, tag }) {
+  const response = await fetch(`${API_BASE_URL}/tools/get_task/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: String(id), status, tag }),
   });
+  if (!response.ok) throw new Error('Failed to fetch task');
+  return await response.json();
 }
 
 // Get all tags
-export async function getTags({ showMetadata, projectRoot }) {
-  return callMcpTool('list_tags', {
-    showMetadata,
-    projectRoot: projectRoot || '/c:/Users/Chris/Herd/task-master',
+export async function getTags({ showMetadata }) {
+  const response = await fetch(`${API_BASE_URL}/tools/list_tags/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ showMetadata }),
   });
+  if (!response.ok) throw new Error('Failed to fetch tags');
+  return await response.json();
 }
 
 // Get complexity report
-export async function getComplexityReport({ file, projectRoot }) {
-  return callMcpTool('complexity_report', {
-    file,
-    projectRoot: projectRoot || '/c:/Users/Chris/Herd/task-master',
+export async function getComplexityReport({ file }) {
+  const response = await fetch(`${API_BASE_URL}/tools/complexity_report/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file }),
   });
+  if (!response.ok) throw new Error('Failed to fetch complexity report');
+  return await response.json();
 }
 
 // Get state (current tag, etc.)
 export async function getState() {
-  // Use MCP tool only
-  return callMcpTool('get_state', {});
+  const response = await fetch(`${API_BASE_URL}/tools/get_state/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) throw new Error('Failed to fetch state');
+  return await response.json();
 }
 
 // Get markdown file (tasks, prd, ideas)
 export async function getMarkdownFile({ type, filename }) {
-  // Use MCP tool only
-  return callMcpTool('get_markdown_file', { type, filename });
+  const response = await fetch(`${API_BASE_URL}/tools/get_markdown_file/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, filename }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch markdown file');
+  return await response.json();
 }
 
 /**
@@ -154,37 +158,46 @@ interface RawTask {
   subtasks: Subtask[];
 }
 
-// Fetch Task Master config via MCP
+// Fetch Task Master config via REST API
 export async function getConfig() {
-  // Try MCP tool for models/config, fallback to direct fetch if needed
-  try {
-    const response = await callMcpTool('models', {});
-    if (response && response.data && response.data.config) {
-      return response.data.config;
-    }
-  } catch (e) {
-    // fallback below
-  }
-  // Fallback: fetch config.json directly
-  const res = await fetch('/data/config.json');
-  if (!res.ok) throw new Error('Failed to load config');
-  return await res.json();
+  const response = await fetch(`${API_BASE_URL}/tools/models/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) throw new Error('Failed to load config');
+  return await response.json();
 }
 
-// List research markdown files via MCP or backend
+// List research markdown files via REST API
 export async function getResearchFiles() {
-  // Use MCP tool only
-  return callMcpTool('list_research_files', {});
+  const response = await fetch(`${API_BASE_URL}/tools/list_research_files/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) throw new Error('Failed to fetch research files');
+  return await response.json();
 }
 
 // Fetch a specific research markdown file
 export async function getResearchFileContent(filename: string) {
-  // Use MCP tool only
-  return callMcpTool('get_research_file_content', { filename });
+  const response = await fetch(`${API_BASE_URL}/tools/get_research_file_content/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch research file content');
+  return await response.json();
 }
 
 // Fetch a specific PRD markdown file
 export async function getPRDFileContent(prdId: string) {
-  // Use MCP tool only
-  return callMcpTool('get_prd_file_content', { prdId });
+  const response = await fetch(`${API_BASE_URL}/tools/get_prd_file_content/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prdId }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch PRD file content');
+  return await response.json();
 }

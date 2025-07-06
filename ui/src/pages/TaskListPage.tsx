@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTaskContext } from '../hooks/useTaskContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTaskFilters } from '../hooks/useTaskFilters';
@@ -48,6 +48,7 @@ export default function TaskListPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10); // State for items per page
+  const navigate = useNavigate();
 
   // Dynamic button classes based on the selected theme
   const sortButtonClasses = {
@@ -70,22 +71,6 @@ export default function TaskListPage() {
   };
 
   useEffect(() => {
-    const fetchInitialTag = async () => {
-      if (allTags.length > 0) {
-        try {
-          const state = await getState();
-          if (state.currentTag && allTags.includes(state.currentTag)) {
-            setFilterTag(state.currentTag);
-          }
-        } catch (err) {
-          console.error("Failed to load initial state for tag filter:", err);
-        }
-      }
-    };
-    fetchInitialTag();
-  }, [allTags, setFilterTag]);
-
-  useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus, filterPriority, filterTag, searchTerm, itemsPerPage]);
 
@@ -94,6 +79,19 @@ export default function TaskListPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return sortedTasks.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedTasks, currentPage, itemsPerPage]);
+
+  // Remove debug logs
+  // Remove debug fallback message
+  if (paginatedTasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-zinc-500 dark:text-zinc-400">
+        <h2 className="text-xl font-semibold mb-2">No tasks found</h2>
+        <p className="text-center max-w-md">
+          There are no tasks to display. Try adjusting your filters or add a new task.
+        </p>
+      </div>
+    );
+  }
 
   const SortIcon = ({ for_key }: { for_key: string }) => {
     if (sortKey !== for_key) return null;
@@ -109,15 +107,26 @@ export default function TaskListPage() {
   }
 
   if (error) {
+    if (error === 'REST_API_NOT_RUNNING') {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen text-red-500 dark:text-red-400">
+          <ExclamationTriangleIcon className="h-16 w-16 mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Task Master REST API Not Running</h2>
+          <p className="text-center max-w-md">
+            The Task Master REST API server is not running or could not be reached.<br />
+            Please start the REST API server in your project root:<br />
+            <code className="bg-zinc-900 text-white px-2 py-1 rounded mt-2 block">node rest-server.js</code>
+            <br />
+            Then refresh this page.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center h-screen text-red-500 dark:text-red-400">
         <ExclamationTriangleIcon className="h-16 w-16 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Error Loading Tasks</h2>
-        <p className="text-center max-w-md">
-          There was an issue fetching your tasks. Please check the console for more details.
-          <br />
-          Error: {error.message || 'Unknown error'}
-        </p>
+        <h2 className="text-xl font-semibold mb-2">Error</h2>
+        <p className="text-center max-w-md">{error}</p>
       </div>
     );
   }
@@ -220,50 +229,56 @@ export default function TaskListPage() {
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
                   {paginatedTasks.length > 0 ? (
                     paginatedTasks.map((task) => (
-                      <tr key={task.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors">
-                        <Link to={`/tasks/${task.id}`} className="contents">
-                          <td className="whitespace-nowrap py-2.5 pl-4 pr-3 text-sm font-medium text-zinc-900 dark:text-white sm:pl-6">
-                            #{task.id}
-                          </td>
-                          <td className="px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 max-w-sm">
-                            <div className="truncate">{task.title}</div>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
-                            <span className="inline-flex items-center gap-x-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize">
-                              {statusIcons[task.status]}
-                              <span className="hidden sm:inline">{task.status.replace('-', ' ')}</span>
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                              task.priority === 'high'
-                                ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                                : task.priority === 'medium'
-                                ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                                : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                            }`}>
-                              {task.priority}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
-                            <div className="flex flex-wrap gap-1">
-                              {task.tags?.slice(0, 2).map(tag => (
-                                <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
-                                  {tag}
-                                </span>
-                              ))}
-                              {task.tags && task.tags.length > 2 && (
-                                <span className="text-xs text-zinc-400">+{task.tags.length - 2}</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 text-center">
-                            {task.subtasks?.length || 0}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 text-center">
-                            {task.dependencies.length}
-                          </td>
-                        </Link>
+                      <tr
+                        key={task.id}
+                        className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors"
+                        onClick={() => navigate(`/tasks/${task.id}`)}
+                        tabIndex={0}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') navigate(`/tasks/${task.id}`); }}
+                        role="button"
+                        aria-label={`View details for task ${task.id}`}
+                      >
+                        <td className="whitespace-nowrap py-2.5 pl-4 pr-3 text-sm font-medium text-zinc-900 dark:text-white sm:pl-6">
+                          #{task.id}
+                        </td>
+                        <td className="px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 max-w-sm">
+                          <div className="truncate">{task.title}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
+                          <span className="inline-flex items-center gap-x-1.5 rounded-md px-2 py-0.5 text-xs font-medium capitalize">
+                            {statusIcons[task.status]}
+                            <span className="hidden sm:inline">{task.status.replace('-', ' ')}</span>
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            task.priority === 'high'
+                              ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                              : task.priority === 'medium'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
+                              : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                          }`}>
+                            {task.priority}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300">
+                          <div className="flex flex-wrap gap-1">
+                            {task.tags?.slice(0, 2).map(tag => (
+                              <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
+                                {tag}
+                              </span>
+                            ))}
+                            {task.tags && task.tags.length > 2 && (
+                              <span className="text-xs text-zinc-400">+{task.tags.length - 2}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 text-center">
+                          {task.subtasks?.length || 0}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-300 text-center">
+                          {task.dependencies.length}
+                        </td>
                       </tr>
                     ))
                   ) : (
