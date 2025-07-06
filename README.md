@@ -242,49 +242,27 @@ Task Master now supports Claude models through the Claude Code CLI, which requir
 
 [Learn more about Claude Code setup](docs/examples/claude-code-usage.md)
 
+## UI (Frontend)
+
+The Task Master UI is now located in the `ui/` directory at the root of this repository.
+
+### Running the UI
+
+1. Open a terminal and navigate to the `ui/` directory:
+   ```bash
+   cd ui
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+The UI will be available at the port specified by Vite (usually http://localhost:5173).
+
 ## Troubleshooting
 
-### If `task-master init` doesn't respond
-
-Try running it with Node directly:
-
-```bash
-node node_modules/claude-task-master/scripts/init.js
-```
-
-Or clone the repository and run:
-
-```bash
-git clone https://github.com/eyaltoledano/claude-task-master.git
-cd claude-task-master
-node scripts/init.js
-```
-
-## Contributors
-
-<a href="https://github.com/eyaltoledano/claude-task-master/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=eyaltoledano/claude-task-master" alt="Task Master project contributors" />
-</a>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=eyaltoledano/claude-task-master&type=Timeline)](https://www.star-history.com/#eyaltoledano/claude-task-master&Timeline)
-
-## Licensing
-
-Task Master is licensed under the MIT License with Commons Clause. This means you can:
-
-✅ **Allowed**:
-
-- Use Task Master for any purpose (personal, commercial, academic)
-- Modify the code
-- Distribute copies
-- Create and sell products built using Task Master
-
-❌ **Not Allowed**:
-
-- Sell Task Master itself
-- Offer Task Master as a hosted service
-- Create competing products based on Task Master
-
-See the [LICENSE](LICENSE) file for the complete license text and [licensing details](docs/licensing.md) for more information.
+### If `task-master init`

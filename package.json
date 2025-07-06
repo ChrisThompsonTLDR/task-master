@@ -16,13 +16,15 @@
 		"test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
 		"test:e2e": "./tests/e2e/run_e2e.sh",
 		"test:e2e-report": "./tests/e2e/run_e2e.sh --analyze-log",
-		"prepare": "chmod +x bin/task-master.js mcp-server/server.js",
 		"changeset": "changeset",
 		"release": "changeset publish",
 		"inspector": "npx @modelcontextprotocol/inspector node mcp-server/server.js",
 		"mcp-server": "node mcp-server/server.js",
 		"format-check": "biome format .",
-		"format": "biome format . --write"
+		"format": "biome format . --write",
+		"dev": "npm --prefix ui run dev",
+		"dev:ui": "npm --prefix ui run dev",
+		"dev:backend": "node mcp-server/server.js"
 	},
 	"keywords": [
 		"claude",
